@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.util.Vector;
 
 import com.xxmicloxx.NoteBlockAPI.model.Song;
 import com.xxmicloxx.NoteBlockAPI.utils.NBSDecoder;
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Random;
 
 public class BadApplePlugin extends JavaPlugin implements Listener {
     private List<String> frames = new ArrayList<>();
@@ -39,18 +41,23 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
     private Map<UUID, List<org.bukkit.entity.ArmorStand>> holograms = new HashMap<>();
     private Map<UUID, Boolean> playerInTheater = new HashMap<>();
     private Map<UUID, RadioSongPlayer> songPlayers = new HashMap<>();
+    private Map<UUID, Location> playerSpawns = new HashMap<>();
+    private List<Location> availableSpawns = new ArrayList<>();
     private World theaterWorld;
     private Song song;
     private final int HOLOGRAM_WIDTH = 60;
     private final int HOLOGRAM_HEIGHT = 30;
     private final double FRAME_RATE = 27.95;
-    private double MS_PER_FRAME = 1000.0 / FRAME_RATE; 
+    private double MS_PER_FRAME = 1000.0 / FRAME_RATE;
+    private final int SPAWN_RADIUS = 100;
+    private final int MIN_DISTANCE = 30;
     
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
         
         setupTheaterWorld();
+        generateSpawnPoints();
         loadFrames();
         loadSong();
         
@@ -67,6 +74,8 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
         activeAnimations.clear();
         holograms.clear();
         playerInTheater.clear();
+        playerSpawns.clear();
+        availableSpawns.clear();
         
         for (RadioSongPlayer songPlayer : songPlayers.values()) {
             songPlayer.setPlaying(false);
@@ -94,18 +103,67 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
                 theaterWorld.setStorm(false);
                 theaterWorld.setThundering(false);
                 theaterWorld.setSpawnLocation(0, 64, 0);
-                
-                Location platformLoc = new Location(theaterWorld, 0, 63, 0);
-                for (int x = -2; x <= 2; x++) {
-                    for (int z = -2; z <= 2; z++) {
-                        Location blockLoc = platformLoc.clone().add(x, 0, z);
-                        blockLoc.getBlock().setType(Material.BARRIER);
-                    }
-                }
             } catch (Exception e) {
                 getLogger().warning("Could not configure world: " + e.getMessage());
             }
         }
+    }
+
+    private void generateSpawnPoints() {
+        availableSpawns.clear();
+        Random random = new Random();
+        int attempts = 0;
+        int maxAttempts = 1000;
+        
+        while (availableSpawns.size() < 50 && attempts < maxAttempts) {
+            attempts++;
+            
+            double angle = random.nextDouble() * 2 * Math.PI;
+            double distance = MIN_DISTANCE + random.nextDouble() * (SPAWN_RADIUS - MIN_DISTANCE);
+            
+            int x = (int) (distance * Math.cos(angle));
+            int z = (int) (distance * Math.sin(angle));
+            
+            Location spawn = new Location(theaterWorld, x, 64, z);
+            
+            boolean valid = true;
+            for (Location existing : availableSpawns) {
+                if (existing.distance(spawn) < MIN_DISTANCE) {
+                    valid = false;
+                    break;
+                }
+            }
+            
+            if (valid) {
+                availableSpawns.add(spawn);
+                
+                for (int px = -1; px <= 1; px++) {
+                    for (int pz = -1; pz <= 1; pz++) {
+                        Location blockLoc = spawn.clone().add(px, -1, pz);
+                        blockLoc.getBlock().setType(Material.BARRIER);
+                    }
+                }
+            }
+        }
+        
+        getLogger().info("Generated " + availableSpawns.size() + " spawn points");
+    }
+
+    private Location getRandomSpawn() {
+        if (availableSpawns.isEmpty()) {
+            generateSpawnPoints();
+        }
+        
+        if (!availableSpawns.isEmpty()) {
+            Location spawn = availableSpawns.remove(0);
+            return spawn;
+        }
+        
+        return new Location(theaterWorld, 0, 64, 0);
+    }
+
+    private void returnSpawn(Location spawn) {
+        availableSpawns.add(spawn);
     }
 
     private void loadSong() {
@@ -147,12 +205,13 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
         
         event.setJoinMessage(null);
         
-        if (theaterWorld != null) {
-            try {
-                player.teleport(new Location(theaterWorld, 0, 64, 0));
-            } catch (Exception e) {
-                getLogger().warning("Could not teleport player: " + e.getMessage());
-            }
+        Location spawn = getRandomSpawn();
+        playerSpawns.put(player.getUniqueId(), spawn);
+        
+        try {
+            player.teleport(spawn);
+        } catch (Exception e) {
+            getLogger().warning("Could not teleport player: " + e.getMessage());
         }
         
         Bukkit.getScheduler().runTaskLater(this, new Runnable() {
@@ -171,6 +230,11 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
         
         if (playerInTheater.getOrDefault(player.getUniqueId(), false)) {
             stopAnimation(player);
+        }
+        
+        Location spawn = playerSpawns.remove(player.getUniqueId());
+        if (spawn != null) {
+            returnSpawn(spawn);
         }
     }
 
@@ -297,7 +361,6 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
         
         preparePlayerForTheater(player);
         
-        
         player.sendMessage(ChatColor.YELLOW + "Loading animation...");
 
         Bukkit.getScheduler().runTask(this, new Runnable() {
@@ -337,11 +400,13 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
     }
 
     private void preparePlayerForTheater(Player player) {
-        try {
-            Location theaterLocation = new Location(theaterWorld, 0, 64, 0);
-            player.teleport(theaterLocation);
-        } catch (Exception e) {
-            getLogger().warning("Could not teleport player to theater: " + e.getMessage());
+        Location spawn = playerSpawns.get(player.getUniqueId());
+        if (spawn != null) {
+            try {
+                player.teleport(spawn);
+            } catch (Exception e) {
+                getLogger().warning("Could not teleport player to theater: " + e.getMessage());
+            }
         }
         
         player.setGameMode(GameMode.ADVENTURE);
@@ -412,6 +477,11 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
         player.setWalkSpeed(0.2f);
         
         playerInTheater.remove(playerId);
+        
+        Location spawn = playerSpawns.remove(playerId);
+        if (spawn != null) {
+            returnSpawn(spawn);
+        }
     }
 
     private class AnimationTask extends BukkitRunnable {
@@ -436,7 +506,6 @@ public class BadApplePlugin extends JavaPlugin implements Listener {
             }
 
             if (currentFrame >= frames.size()) {
-                
                 Bukkit.getScheduler().runTask(BadApplePlugin.this, new Runnable() {
                     @Override
                     public void run() {
