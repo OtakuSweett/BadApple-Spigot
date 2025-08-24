@@ -1,0 +1,7 @@
+name: BadApplePlugin
+version: 1.0.0
+main: com.otakusweett.badapple.spigot.BadApplePlugin
+api-version: "1.8"
+authors: [OtakuSweett]
+description: Displays Bad Apple animation as holograms
+depend: [NoteBlockAPI]

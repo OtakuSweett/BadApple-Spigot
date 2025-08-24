@@ -1,0 +1,4 @@
+*.jar
+target/
+NoteBlockAPI*
+dependency-reduced-pom.xml
