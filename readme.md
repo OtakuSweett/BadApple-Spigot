@@ -20,11 +20,10 @@
 
 ## ⚙️ Features
 
-- **Dynamic Theater World**: Creates a flat world for the animation, with barriers as a stage.  
+- **Dynamic Theater World**: Creates a world for the animation, with barriers as a stage.  
 - **ASCII Holograms**: Renders the frames line by line using invisible armor stands.  
 - **Music Integration**: Plays `.nbs` files using NoteBlockAPI.  
-- **Player Control**: Prevents movement and chat during the animation.  
-- **Automatic Teleport & Restore**: Returns players to their original location after animation ends.  
+- **Player Control**: Prevents movement and chat during the animation.    
 
 ---
 
