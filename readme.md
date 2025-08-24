@@ -130,3 +130,7 @@ BadApplePlugin/
 
 ![Footer](https://img.shields.io/badge/BadApple-Enjoy%20the%20Animation-ff69b4?style=for-the-badge)
 
+
+<img width="794" height="508" alt="{0DF77DD6-AD0A-4A52-82C4-0C927BCB9ED6}" src="https://github.com/user-attachments/assets/b725a3d4-7402-4d00-8825-06c40cb5d9c4" />
+
+
