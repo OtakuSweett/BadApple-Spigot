@@ -98,6 +98,7 @@ Clone the repository and build with Maven:
 ```bash
 git clone https://github.com/OtakuSweett/BadApple-Spigot
 cd BadApplePlugin
+mvn install:install-file -Dfile=NoteBlockAPI.jar -DgroupId=com.xxmicloxx -DartifactId=NoteBlockAPI -Dversion=1.5.0 -Dpackaging=jar
 mvn clean package
 ````
 
