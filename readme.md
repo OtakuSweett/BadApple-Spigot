@@ -1,7 +1,7 @@
 
 # ![BadApplePlugin](https://img.shields.io/badge/BadApplePlugin-v1.0.0-blue?style=for-the-badge)  
 
-![Java](https://img.shields.io/badge/Java-1.8%20to%2021-green?style=flat-square)  
+![Java](https://img.shields.io/badge/Java-8%20to%2021-green?style=flat-square)  
 ![Spigot](https://img.shields.io/badge/Spigot-1.8%20to%201.21.8-red?style=flat-square)  
 
 
