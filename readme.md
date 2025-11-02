@@ -43,7 +43,7 @@
 
    The frames file is required for animation:
 
-    [https://cdn.devsweett.com/baddapple/frames.txt](https://cdn.devsweett.com/baddapple/frames.txt)
+    [https://cdn.devsweett.com/badapple/frames.txt](https://cdn.devsweett.com/badapple/frames.txt)
 
 
 
