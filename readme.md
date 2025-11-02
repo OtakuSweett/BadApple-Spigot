@@ -126,7 +126,7 @@ BadApplePlugin/
 * MC Bedrock:
 * badapple.devsweett.com
 * 44440
-* **Frames CDN:** [cdn.devsweett.com/baddapple/frames.txt](https://cdn.devsweett.com/baddapple/frames.txt)
+* **Frames CDN:** [cdn.devsweett.com/badapple/frames.txt](https://cdn.devsweett.com/badapple/frames.txt)
 * **NoteBlockAPI:** [SpigotMC Resource](https://www.spigotmc.org/resources/noteblockapi.2155/)
 
 ---
